@@ -1,12 +1,22 @@
 use bstr::ByteSlice;
+use clap::Parser;
 use serde_json::{Result, Value};
 use std::fs;
+
+#[derive(Parser, Debug)]
+struct Args {
+    /// list of replays to parse
+    #[arg(required = true)]
+    files: Vec<String>,
+}
 
 struct Player {
     id: u32,
 }
 
 fn main() {
+    let args = Args::parse();
+
     let path = "20240519_2045_poland-Pl21_CS_63_05_prohorovka.wotreplay";
     let buf = fs::read(path).unwrap();
 
