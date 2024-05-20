@@ -3,6 +3,7 @@ use clap::Parser;
 use wotreplays_rparser::cl_args::Args;
 use wotreplays_rparser::load_replay;
 use wotreplays_rparser::player::Player;
+use xlsxwriter::{Format, Workbook, XlsxError};
 
 fn get_players(replay: &serde_json::Value, buf: &mut Vec<Player>) {
     let author_team = replay[0]["personal"]["avatar"]["team"].as_u64().unwrap();
@@ -88,7 +89,7 @@ fn get_players(replay: &serde_json::Value, buf: &mut Vec<Player>) {
         let t_damage_dealt = path["tdamageDealt"].as_u64().unwrap();
         let resource_absorbed = path["resourceAbsorbed"].as_u64().unwrap();
         let credits = path["credits"].as_u64().unwrap();
-        let account_dbid = path["accountDBID"].as_u64().unwrap();
+        // let account_dbid = path["accountDBID"].as_u64().unwrap();
         let artillery_fort_equip_damage_dealt = replay[0]["vehicles"][avatar_session_id][0]
             ["artilleryFortEquipDamageDealt"]
             .as_u64()
@@ -252,13 +253,45 @@ fn merge_players(players: &[Player]) -> Vec<Player> {
     merged_players
 }
 
-fn main() {
-    // let args = Args::parse();
-
-    let replays = [
-        "20240519_2045_poland-Pl21_CS_63_05_prohorovka.wotreplay",
-        "20240519_2300_uk-GB91_Super_Conqueror_10_hills.wotreplay",
+fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
+    let mut format_header = Format::new();
+    format_header.set_bold();
+    let workbook = Workbook::new("out.xlsx")?;
+    let mut sheets = [
+        workbook.add_worksheet(Some("1"))?,
+        workbook.add_worksheet(Some("2"))?,
     ];
+    let mut i1 = 0;
+    let mut i2 = 0;
+    for player in players {
+        sheets[player.team as usize - 1].write_string(
+            if player.team == 1 {
+                i1 += 1;
+                i1 - 1
+            } else {
+                i2 += 1;
+                i2 - 1
+            },
+            0,
+            &player.name,
+            Some(&format_header),
+        )?;
+    }
+
+    Ok(())
+}
+
+fn main() {
+    let args = Args::parse();
+    let replays = match args.files.is_empty() {
+        true => [
+            "20240519_2045_poland-Pl21_CS_63_05_prohorovka.wotreplay".to_string(),
+            "20240519_2300_uk-GB91_Super_Conqueror_10_hills.wotreplay".to_string(),
+        ]
+        .to_vec(),
+        false => args.files,
+    };
+
     let mut buf = Vec::new();
     for path in replays {
         let replay = load_replay(&path).unwrap();
@@ -267,7 +300,8 @@ fn main() {
 
     let merged_players = merge_players(&buf);
 
-    for player in &merged_players {
-        println!("{} {}%", player.name, player.survived_pc());
-    }
+    match export_to_xlsx(&merged_players) {
+        Ok(()) => {}
+        Err(e) => eprintln!("{e}"),
+    };
 }
