@@ -15,31 +15,33 @@ fn main() {
 
     let mut players: Vec<Player> = Vec::new();
     for (rep_id, _) in replay[1].as_object().unwrap().iter() {
-        let vehicle_type = &replay[1][rep_id]["vehicleType"];
+        let path = &replay[1][rep_id];
+
+        let vehicle_type = &path["vehicleType"];
         if ["Observer", "Spectator"]
             .contains(&vehicle_type.as_str().unwrap().split(':').nth(1).unwrap())
         {
             continue;
         }
-        let name = replay[1][rep_id]["name"].as_str().unwrap();
-        let fake_name = replay[1][rep_id]["fakeName"].as_str().unwrap();
-        let wtr = replay[1][rep_id]["wtr"].as_u64().unwrap_or(0u64);
+        let name = path["name"].as_str().unwrap();
+        let fake_name = path["fakeName"].as_str().unwrap();
+        let wtr = path["wtr"].as_u64().unwrap_or(0u64);
         let is_alive = match replay[1][rep_id]["isAlive"].as_u64().unwrap() {
             0 => false,
             _ => true,
         };
-        let max_health = replay[1][rep_id]["maxHealth"].as_u64().unwrap();
-        let clan_abbrev = replay[1][rep_id]["clanAbbrev"].as_str().unwrap();
-        let is_team_killer = match &replay[1][rep_id]["isTeamKiller"].as_u64().unwrap() {
+        let max_health = path["maxHealth"].as_u64().unwrap();
+        let clan_abbrev = path["clanAbbrev"].as_str().unwrap();
+        let is_team_killer = match &path["isTeamKiller"].as_u64().unwrap() {
             0 => false,
             _ => true,
         };
-        let team = if &replay[1][rep_id]["team"] == battle_winner {
+        let team = if &path["team"] == battle_winner {
             "green"
         } else {
             "red"
         };
-        let avatar_session_id = replay[1][rep_id]["avatarSessionID"].as_str().unwrap();
+        let avatar_session_id = path["avatarSessionID"].as_str().unwrap();
 
         players.push(Player {
             vehicle_type: vehicle_type.as_str().unwrap().to_string(),
@@ -54,7 +56,9 @@ fn main() {
             avatar_session_id: avatar_session_id.to_string(),
         });
 
-        let spotted = &replay[0]["vehicles"][avatar_session_id][0]["spotted"];
+        let path = &replay[0]["vehicles"][avatar_session_id][0];
+
+        let spotted = path["spotted"].as_u64().unwrap();
     }
 
     println!("{players:?}");
