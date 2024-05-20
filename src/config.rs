@@ -1,3 +1,4 @@
+use dirs;
 use serde;
 use serde_json;
 use std::fs;
@@ -44,9 +45,23 @@ impl Config {
         }
     }
 
+    pub fn load() -> Option<Self> {
+        let mut config_path = dirs::home_dir().unwrap();
+        config_path.push(".wotreplays-rparser/config.json");
+        match fs::metadata(&config_path) {
+            Ok(_) => {
+                let buf = fs::read_to_string(&config_path).unwrap();
+                Some(serde_json::from_str::<Self>(&buf).unwrap())
+            }
+            Err(_) => None,
+        }
+    }
+
     pub fn save(&self) -> Result<(), serde_json::Error> {
+        let mut config_path = dirs::home_dir().unwrap();
+        config_path.push(".wotreplays-rparser/config.json");
         let buf = serde_json::to_string_pretty(self)?;
-        fs::write("./config.json", &buf).unwrap();
+        fs::write(&config_path, &buf).unwrap();
 
         Ok(())
     }
