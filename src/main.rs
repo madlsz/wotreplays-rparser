@@ -6,18 +6,18 @@ use wotreplays_rparser::{cli, gui};
 
 fn main() {
     // load config, create it if it doesnt exist
-    let config = match Config::load() {
+    let config = Box::new(match Config::load() {
         Some(config) => config,
         None => {
             let config = Config::new();
             config.save().unwrap();
             config
         }
-    };
+    });
 
-    let args = Args::parse();
+    let args = Box::new(Args::parse());
     match args.gui {
-        true => gui(&args, &config),
-        false => cli(&args, &config),
-    }
+        true => gui(args, config),
+        false => cli(args, config),
+    };
 }
