@@ -87,6 +87,123 @@ pub struct Player {
     pub clan_id: u64,
 }
 
+impl Player {
+    pub fn survived_pc(&self) -> f64 {
+        self.battles_survived as f64 / self.battles_played as f64 * 100f64
+    }
+
+    pub fn wr_pc(&self) -> f64 {
+        self.battles_won as f64 / self.battles_played as f64 * 100f64
+    }
+
+    pub fn frags_pb(&self) -> f64 {
+        self.kills as f64 / self.battles_played as f64
+    }
+
+    pub fn xp_pb(&self) -> f64 {
+        self.xp as f64 / self.battles_played as f64
+    }
+
+    pub fn vehicle_shots_pb(&self) -> f64 {
+        self.shots as f64 / self.battles_played as f64
+    }
+
+    pub fn vehicle_hits_pb(&self) -> f64 {
+        self.direct_hits as f64 / self.battles_played as f64
+    }
+
+    pub fn vehicle_explosion_hits_pb(&self) -> f64 {
+        self.explosion_hits as f64 / self.battles_played as f64
+    }
+
+    pub fn vehicle_pierced_pb(&self) -> f64 {
+        self.piercing_enemy_hits as f64 / self.battles_played as f64
+    }
+
+    pub fn damage_dealt_pb(&self) -> f64 {
+        self.damage_dealt as f64 / self.battles_played as f64
+    }
+
+    pub fn sniper_damage_dealt_pb(&self) -> f64 {
+        self.sniper_damage_dealt as f64 / self.battles_played as f64
+    }
+
+    pub fn vehicle_incoming_hits_pb(&self) -> f64 {
+        self.direct_hits_received as f64 / self.battles_played as f64
+    }
+
+    pub fn pierced_received_pb(&self) -> f64 {
+        self.piercings_received as f64 / self.battles_played as f64
+    }
+
+    pub fn explosion_hits_received_pb(&self) -> f64 {
+        self.explosion_hits_received as f64 / self.battles_played as f64
+    }
+
+    pub fn no_damage_direct_hits_received_pb(&self) -> f64 {
+        self.no_damage_direct_hits_received as f64 / self.battles_played as f64
+    }
+
+    pub fn potential_damage_received_pb(&self) -> f64 {
+        self.potential_damage_received as f64 / self.battles_played as f64
+    }
+
+    pub fn damage_blocked_by_armor_pb(&self) -> f64 {
+        self.damage_blocked_by_armor as f64 / self.battles_played as f64
+    }
+
+    pub fn spotted_pb(&self) -> f64 {
+        self.spotted as f64 / self.battles_played as f64
+    }
+
+    pub fn damaged_pb(&self) -> f64 {
+        self.damaged as f64 / self.battles_played as f64
+    }
+
+    pub fn killed_pb(&self) -> f64 {
+        self.kills as f64 / self.battles_played as f64
+    }
+
+    pub fn damage_assisted_pb(&self) -> f64 {
+        (self.damage_assisted_radio + self.damage_assisted_track) as f64
+            / self.battles_played as f64
+    }
+
+    pub fn damage_assisted_stun_pb(&self) -> f64 {
+        self.damage_assisted_stun as f64 / self.battles_played as f64
+    }
+
+    pub fn stun_num_pb(&self) -> f64 {
+        self.stun_num as f64 / self.battles_played as f64
+    }
+
+    pub fn capture_points_pb(&self) -> f64 {
+        self.capture_points as f64 / self.battles_played as f64
+    }
+
+    pub fn defence_points_pb(&self) -> f64 {
+        self.dropped_capture_points as f64 / self.battles_played as f64
+    }
+
+    pub fn mileage_pb(&self) -> f64 {
+        self.mileage as f64 / self.battles_played as f64
+    }
+
+    pub fn accuracy_pc(&self) -> f64 {
+        match self.direct_hits {
+            0u64 => 0f64,
+            _ => self.direct_hits as f64 / self.shots as f64 * 100f64,
+        }
+    }
+
+    pub fn penetration_pc(&self) -> f64 {
+        match self.piercing_enemy_hits {
+            0u64 => 0f64,
+            _ => self.piercing_enemy_hits as f64 / self.direct_hits as f64 * 100f64,
+        }
+    }
+}
+
 impl cmp::PartialEq for Player {
     fn eq(&self, other: &Self) -> bool {
         self.account_dbid == other.account_dbid

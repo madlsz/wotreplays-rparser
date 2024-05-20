@@ -266,5 +266,8 @@ fn main() {
     }
 
     let merged_players = merge_players(&buf);
-    println!("{} -> {}", buf.len(), merged_players.len());
+
+    for player in &merged_players {
+        println!("{} {}%", player.name, player.survived_pc());
+    }
 }
