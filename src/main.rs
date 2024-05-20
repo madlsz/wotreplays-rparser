@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use clap::Parser;
 
 use wotreplays_rparser::cl_args::Args;
 use wotreplays_rparser::load_replay;
 use wotreplays_rparser::player::Player;
-use xlsxwriter::{Format, Workbook, XlsxError};
+use xlsxwriter::{Format, Workbook, Worksheet, XlsxError};
 
 fn get_players(replay: &serde_json::Value, buf: &mut Vec<Player>) {
     let author_team = replay[0]["personal"]["avatar"]["team"].as_u64().unwrap();
@@ -236,6 +238,7 @@ fn get_players(replay: &serde_json::Value, buf: &mut Vec<Player>) {
             battles_lost,
             battles_drew,
             clan_id,
+            stats: HashMap::new(),
         });
     }
 }
@@ -250,32 +253,48 @@ fn merge_players(players: &[Player]) -> Vec<Player> {
         };
     }
 
+    for player in &mut merged_players {
+        player.create_stats_pointers();
+    }
+
     merged_players
 }
 
-fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
+fn add_header(sheet: &mut Worksheet, fields: &[&str]) -> Result<(), XlsxError> {
     let mut format_header = Format::new();
     format_header.set_bold();
+    for (i, field) in fields.iter().enumerate() {
+        sheet.write_string(0, i as u16, field, Some(&format_header))?;
+    }
+
+    Ok(())
+}
+
+fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
+    let fields = ["name", "account_dbid", "damage_dealt_pb"];
+
     let workbook = Workbook::new("out.xlsx")?;
     let mut sheets = [
         workbook.add_worksheet(Some("1"))?,
         workbook.add_worksheet(Some("2"))?,
     ];
-    let mut i1 = 0;
-    let mut i2 = 0;
+    for sheet in sheets.iter_mut() {
+        add_header(sheet, &fields)?;
+    }
+
+    let mut i1 = 1u32;
+    let mut i2 = 1u32;
     for player in players {
-        sheets[player.team as usize - 1].write_string(
-            if player.team == 1 {
-                i1 += 1;
-                i1 - 1
-            } else {
-                i2 += 1;
-                i2 - 1
-            },
-            0,
-            &player.name,
-            Some(&format_header),
-        )?;
+        let j = if player.team == 1 { &mut i1 } else { &mut i2 };
+        for (i, field) in fields.iter().enumerate() {
+            sheets[player.team as usize - 1].write_string(
+                *j,
+                i as u16,
+                &player.stats.get(*field).unwrap()(player).to_string(),
+                None,
+            )?;
+        }
+        *j += 1;
     }
 
     Ok(())

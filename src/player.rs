@@ -1,7 +1,9 @@
 use std::cmp;
+use std::collections::HashMap;
+use std::fmt::Display;
 use std::ops;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Player {
     pub account_dbid: u64,
     pub battles_played: u64,
@@ -85,121 +87,230 @@ pub struct Player {
     pub battles_lost: u64,
     pub battles_drew: u64,
     pub clan_id: u64,
+    pub stats: HashMap<String, fn(&Player) -> Stats>,
+}
+
+pub enum Stats {
+    F64(f64),
+    U64(u64),
+    String(String),
+}
+
+impl Display for Stats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Stats::F64(x) => write!(f, "{}", x.to_string()),
+            Stats::U64(x) => write!(f, "{}", x.to_string()),
+            Stats::String(x) => write!(f, "{x}"),
+        }
+    }
 }
 
 impl Player {
-    pub fn survived_pc(&self) -> f64 {
-        self.battles_survived as f64 / self.battles_played as f64 * 100f64
+    pub fn create_stats_pointers(&mut self) {
+        self.stats.insert(String::from("name"), Player::name);
+        self.stats
+            .insert(String::from("account_dbid"), Player::account_dbid);
+        self.stats
+            .insert(String::from("damage_dealt_pb"), Player::damage_dealt_pb);
+        self.stats
+            .insert(String::from("survived_pc"), Player::survived_pc);
+        self.stats.insert(String::from("wr_pc"), Player::wr_pc);
+        self.stats
+            .insert(String::from("frags_pb"), Player::frags_pb);
+        self.stats.insert(String::from("xp_pb"), Player::xp_pb);
+        self.stats
+            .insert(String::from("vehicle_shots_pb"), Player::vehicle_shots_pb);
+        self.stats
+            .insert(String::from("vehicle_hits_pb"), Player::vehicle_hits_pb);
+        self.stats.insert(
+            String::from("vehicle_explosion_hits_pb"),
+            Player::vehicle_explosion_hits_pb,
+        );
+        self.stats.insert(
+            String::from("vehicle_pierced_pb"),
+            Player::vehicle_pierced_pb,
+        );
+        self.stats.insert(
+            String::from("sniper_damage_dealt_pb"),
+            Player::sniper_damage_dealt_pb,
+        );
+        self.stats.insert(
+            String::from("vehicle_incoming_hits_pb"),
+            Player::vehicle_incoming_hits_pb,
+        );
+        self.stats.insert(
+            String::from("pierced_received_pb"),
+            Player::pierced_received_pb,
+        );
+        self.stats.insert(
+            String::from("explosion_hits_received_pb"),
+            Player::explosion_hits_received_pb,
+        );
+        self.stats.insert(
+            String::from("no_damage_direct_hits_received_pb"),
+            Player::no_damage_direct_hits_received_pb,
+        );
+        self.stats.insert(
+            String::from("potential_damage_received_pb"),
+            Player::potential_damage_received_pb,
+        );
+        self.stats.insert(
+            String::from("damage_blocked_by_armor_pb"),
+            Player::damage_blocked_by_armor_pb,
+        );
+        self.stats
+            .insert(String::from("spotted_pb"), Player::spotted_pb);
+        self.stats
+            .insert(String::from("damaged_pb"), Player::damaged_pb);
+        self.stats
+            .insert(String::from("killed_pb"), Player::killed_pb);
+        self.stats.insert(
+            String::from("damage_assisted_pb"),
+            Player::damage_assisted_pb,
+        );
+        self.stats.insert(
+            String::from("damage_assisted_stun_pb"),
+            Player::damage_assisted_stun_pb,
+        );
+        self.stats
+            .insert(String::from("stun_num_pb"), Player::stun_num_pb);
+        self.stats
+            .insert(String::from("capture_points_pb"), Player::capture_points_pb);
+        self.stats
+            .insert(String::from("defence_points_pb"), Player::defence_points_pb);
+        self.stats
+            .insert(String::from("mileage_pb"), Player::mileage_pb);
+        self.stats
+            .insert(String::from("mileage_pb"), Player::mileage_pb);
+        self.stats
+            .insert(String::from("accuracy_pc"), Player::accuracy_pc);
+        self.stats
+            .insert(String::from("penetration_pc"), Player::penetration_pc);
     }
 
-    pub fn wr_pc(&self) -> f64 {
-        self.battles_won as f64 / self.battles_played as f64 * 100f64
+    fn name(&self) -> Stats {
+        Stats::String(self.name.clone())
     }
 
-    pub fn frags_pb(&self) -> f64 {
-        self.kills as f64 / self.battles_played as f64
+    fn account_dbid(&self) -> Stats {
+        Stats::U64(self.account_dbid)
     }
 
-    pub fn xp_pb(&self) -> f64 {
-        self.xp as f64 / self.battles_played as f64
+    fn survived_pc(&self) -> Stats {
+        Stats::F64(self.battles_survived as f64 / self.battles_played as f64 * 100f64)
     }
 
-    pub fn vehicle_shots_pb(&self) -> f64 {
-        self.shots as f64 / self.battles_played as f64
+    fn wr_pc(&self) -> Stats {
+        Stats::F64(self.battles_won as f64 / self.battles_played as f64 * 100f64)
     }
 
-    pub fn vehicle_hits_pb(&self) -> f64 {
-        self.direct_hits as f64 / self.battles_played as f64
+    fn frags_pb(&self) -> Stats {
+        Stats::F64(self.kills as f64 / self.battles_played as f64)
     }
 
-    pub fn vehicle_explosion_hits_pb(&self) -> f64 {
-        self.explosion_hits as f64 / self.battles_played as f64
+    fn xp_pb(&self) -> Stats {
+        Stats::F64(self.xp as f64 / self.battles_played as f64)
     }
 
-    pub fn vehicle_pierced_pb(&self) -> f64 {
-        self.piercing_enemy_hits as f64 / self.battles_played as f64
+    fn vehicle_shots_pb(&self) -> Stats {
+        Stats::F64(self.shots as f64 / self.battles_played as f64)
     }
 
-    pub fn damage_dealt_pb(&self) -> f64 {
-        self.damage_dealt as f64 / self.battles_played as f64
+    fn vehicle_hits_pb(&self) -> Stats {
+        Stats::F64(self.direct_hits as f64 / self.battles_played as f64)
     }
 
-    pub fn sniper_damage_dealt_pb(&self) -> f64 {
-        self.sniper_damage_dealt as f64 / self.battles_played as f64
+    fn vehicle_explosion_hits_pb(&self) -> Stats {
+        Stats::F64(self.explosion_hits as f64 / self.battles_played as f64)
     }
 
-    pub fn vehicle_incoming_hits_pb(&self) -> f64 {
-        self.direct_hits_received as f64 / self.battles_played as f64
+    fn vehicle_pierced_pb(&self) -> Stats {
+        Stats::F64(self.piercing_enemy_hits as f64 / self.battles_played as f64)
     }
 
-    pub fn pierced_received_pb(&self) -> f64 {
-        self.piercings_received as f64 / self.battles_played as f64
+    fn damage_dealt_pb(&self) -> Stats {
+        Stats::F64(self.damage_dealt as f64 / self.battles_played as f64)
     }
 
-    pub fn explosion_hits_received_pb(&self) -> f64 {
-        self.explosion_hits_received as f64 / self.battles_played as f64
+    fn sniper_damage_dealt_pb(&self) -> Stats {
+        Stats::F64(self.sniper_damage_dealt as f64 / self.battles_played as f64)
     }
 
-    pub fn no_damage_direct_hits_received_pb(&self) -> f64 {
-        self.no_damage_direct_hits_received as f64 / self.battles_played as f64
+    fn vehicle_incoming_hits_pb(&self) -> Stats {
+        Stats::F64(self.direct_hits_received as f64 / self.battles_played as f64)
     }
 
-    pub fn potential_damage_received_pb(&self) -> f64 {
-        self.potential_damage_received as f64 / self.battles_played as f64
+    fn pierced_received_pb(&self) -> Stats {
+        Stats::F64(self.piercings_received as f64 / self.battles_played as f64)
     }
 
-    pub fn damage_blocked_by_armor_pb(&self) -> f64 {
-        self.damage_blocked_by_armor as f64 / self.battles_played as f64
+    fn explosion_hits_received_pb(&self) -> Stats {
+        Stats::F64(self.explosion_hits_received as f64 / self.battles_played as f64)
     }
 
-    pub fn spotted_pb(&self) -> f64 {
-        self.spotted as f64 / self.battles_played as f64
+    fn no_damage_direct_hits_received_pb(&self) -> Stats {
+        Stats::F64(self.no_damage_direct_hits_received as f64 / self.battles_played as f64)
     }
 
-    pub fn damaged_pb(&self) -> f64 {
-        self.damaged as f64 / self.battles_played as f64
+    fn potential_damage_received_pb(&self) -> Stats {
+        Stats::F64(self.potential_damage_received as f64 / self.battles_played as f64)
     }
 
-    pub fn killed_pb(&self) -> f64 {
-        self.kills as f64 / self.battles_played as f64
+    fn damage_blocked_by_armor_pb(&self) -> Stats {
+        Stats::F64(self.damage_blocked_by_armor as f64 / self.battles_played as f64)
     }
 
-    pub fn damage_assisted_pb(&self) -> f64 {
-        (self.damage_assisted_radio + self.damage_assisted_track) as f64
-            / self.battles_played as f64
+    fn spotted_pb(&self) -> Stats {
+        Stats::F64(self.spotted as f64 / self.battles_played as f64)
     }
 
-    pub fn damage_assisted_stun_pb(&self) -> f64 {
-        self.damage_assisted_stun as f64 / self.battles_played as f64
+    fn damaged_pb(&self) -> Stats {
+        Stats::F64(self.damaged as f64 / self.battles_played as f64)
     }
 
-    pub fn stun_num_pb(&self) -> f64 {
-        self.stun_num as f64 / self.battles_played as f64
+    fn killed_pb(&self) -> Stats {
+        Stats::F64(self.kills as f64 / self.battles_played as f64)
     }
 
-    pub fn capture_points_pb(&self) -> f64 {
-        self.capture_points as f64 / self.battles_played as f64
+    fn damage_assisted_pb(&self) -> Stats {
+        Stats::F64(
+            (self.damage_assisted_radio + self.damage_assisted_track) as f64
+                / self.battles_played as f64,
+        )
     }
 
-    pub fn defence_points_pb(&self) -> f64 {
-        self.dropped_capture_points as f64 / self.battles_played as f64
+    fn damage_assisted_stun_pb(&self) -> Stats {
+        Stats::F64(self.damage_assisted_stun as f64 / self.battles_played as f64)
     }
 
-    pub fn mileage_pb(&self) -> f64 {
-        self.mileage as f64 / self.battles_played as f64
+    fn stun_num_pb(&self) -> Stats {
+        Stats::F64(self.stun_num as f64 / self.battles_played as f64)
     }
 
-    pub fn accuracy_pc(&self) -> f64 {
+    fn capture_points_pb(&self) -> Stats {
+        Stats::F64(self.capture_points as f64 / self.battles_played as f64)
+    }
+
+    fn defence_points_pb(&self) -> Stats {
+        Stats::F64(self.dropped_capture_points as f64 / self.battles_played as f64)
+    }
+
+    fn mileage_pb(&self) -> Stats {
+        Stats::F64(self.mileage as f64 / self.battles_played as f64)
+    }
+
+    fn accuracy_pc(&self) -> Stats {
         match self.direct_hits {
-            0u64 => 0f64,
-            _ => self.direct_hits as f64 / self.shots as f64 * 100f64,
+            0u64 => Stats::F64(0f64),
+            _ => Stats::F64(self.direct_hits as f64 / self.shots as f64 * 100f64),
         }
     }
 
-    pub fn penetration_pc(&self) -> f64 {
+    fn penetration_pc(&self) -> Stats {
         match self.piercing_enemy_hits {
-            0u64 => 0f64,
-            _ => self.piercing_enemy_hits as f64 / self.direct_hits as f64 * 100f64,
+            0u64 => Stats::F64(0f64),
+            _ => Stats::F64(self.piercing_enemy_hits as f64 / self.direct_hits as f64 * 100f64),
         }
     }
 }
