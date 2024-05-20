@@ -6,6 +6,7 @@ use eframe::egui;
 use rfd;
 use std::path::PathBuf;
 
+#[allow(dead_code)]
 pub struct GUI {
     args: Box<Args>,
     config: Box<Config>,
@@ -39,14 +40,17 @@ impl eframe::App for GUI {
                     if ui.button("Go").clicked() {
                         let mut buf = Vec::new();
                         for path in &self.replays {
-                            let replay = load_replay(path.to_str().unwrap()).unwrap();
-                            get_players(&replay, &mut buf);
+                            let replay = load_replay(path.to_str().unwrap());
+                            match replay {
+                                Ok(replay) => get_players(&replay, &mut buf),
+                                Err(_) => {}
+                            }
                         }
                         let merged_players = merge_players(&buf);
                         if let Some(out) = rfd::FileDialog::new()
                             .add_filter("xlsx", &["xlsx"])
-                            // .set_directory(dirs::home_dir().unwrap())
-                            .set_file_name(&self.args.out_path)
+                            .set_directory(dirs::home_dir().unwrap())
+                            // .set_file_name(&self.args.out_path)
                             .save_file()
                         {
                             export_to_xlsx(&merged_players, &self.config, out.to_str().unwrap())

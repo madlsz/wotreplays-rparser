@@ -5,8 +5,8 @@ pub struct Args {
     /// List of replays to parse
     pub replays: Vec<String>,
 
-    /// Enable GUI
-    #[arg(short, long, default_value_t = false)]
+    /// Disable GUI
+    #[arg(short, long, default_value_t = true)]
     pub gui: bool,
 
     /// Out path
