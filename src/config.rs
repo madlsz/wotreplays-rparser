@@ -2,6 +2,7 @@ use dirs;
 use serde;
 use serde_json;
 use std::fs;
+use std::path;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
@@ -46,23 +47,52 @@ impl Config {
     }
 
     pub fn load() -> Option<Self> {
-        let mut config_path = dirs::home_dir().unwrap();
-        config_path.push(".wotreplays-rparser/config.json");
-        match fs::metadata(&config_path) {
-            Ok(_) => {
-                let buf = fs::read_to_string(&config_path).unwrap();
-                Some(serde_json::from_str::<Self>(&buf).unwrap())
-            }
-            Err(_) => None,
+        if Config::config_dir_exists() && Config::config_file_exists() {
+            let buf = fs::read_to_string(Config::config_file_path()).unwrap();
+
+            Some(serde_json::from_str::<Self>(&buf).unwrap())
+        } else {
+            None
         }
     }
 
     pub fn save(&self) -> Result<(), serde_json::Error> {
-        let mut config_path = dirs::home_dir().unwrap();
-        config_path.push(".wotreplays-rparser/config.json");
+        if !Config::config_dir_exists() {
+            fs::create_dir(Config::config_dir_path()).unwrap();
+        }
         let buf = serde_json::to_string_pretty(self)?;
-        fs::write(&config_path, &buf).unwrap();
+        fs::write(Config::config_file_path(), &buf).unwrap();
 
         Ok(())
+    }
+
+    fn config_dir_exists() -> bool {
+        let path = Config::config_dir_path();
+        match fs::metadata(&path) {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
+    fn config_file_exists() -> bool {
+        let path = Config::config_file_path();
+        match fs::metadata(&path) {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
+    fn config_dir_path() -> path::PathBuf {
+        let mut path = dirs::home_dir().unwrap();
+        path.push(".wotreplays-rparser");
+
+        path
+    }
+
+    fn config_file_path() -> path::PathBuf {
+        let mut path = Config::config_dir_path();
+        path.push("config.json");
+
+        path
     }
 }

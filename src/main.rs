@@ -273,9 +273,7 @@ fn add_header(sheet: &mut Worksheet, fields: &[String]) -> Result<(), XlsxError>
     Ok(())
 }
 
-fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
-    let config = Config::new();
-
+fn export_to_xlsx(players: &[Player], config: &Config) -> Result<(), XlsxError> {
     let workbook = Workbook::new("out.xlsx")?;
     let mut sheets = [
         workbook.add_worksheet(Some("1"))?,
@@ -304,26 +302,41 @@ fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
 }
 
 fn main() {
+    // load config, create it if doesnt exist
+    let config = match Config::load() {
+        Some(config) => config,
+        None => {
+            let config = Config::new();
+            config.save().unwrap();
+            config
+        }
+    };
+
     let args = Args::parse();
-    let replays = match args.files.is_empty() {
-        true => [
-            "20240519_2045_poland-Pl21_CS_63_05_prohorovka.wotreplay".to_string(),
-            "20240519_2300_uk-GB91_Super_Conqueror_10_hills.wotreplay".to_string(),
-        ]
-        .to_vec(),
-        false => args.files,
-    };
+    match args.gui {
+        false => {
+            let replays = match args.files.is_empty() {
+                true => [
+                    "20240519_2045_poland-Pl21_CS_63_05_prohorovka.wotreplay".to_string(),
+                    "20240519_2300_uk-GB91_Super_Conqueror_10_hills.wotreplay".to_string(),
+                ]
+                .to_vec(),
+                false => args.files,
+            };
 
-    let mut buf = Vec::new();
-    for path in replays {
-        let replay = load_replay(&path).unwrap();
-        get_players(&replay, &mut buf);
+            let mut buf = Vec::new();
+            for path in replays {
+                let replay = load_replay(&path).unwrap();
+                get_players(&replay, &mut buf);
+            }
+
+            let merged_players = merge_players(&buf);
+
+            match export_to_xlsx(&merged_players, &config) {
+                Ok(()) => {}
+                Err(e) => eprintln!("{e}"),
+            };
+        }
+        true => panic!("GUI not implemented!"),
     }
-
-    let merged_players = merge_players(&buf);
-
-    match export_to_xlsx(&merged_players) {
-        Ok(()) => {}
-        Err(e) => eprintln!("{e}"),
-    };
 }
