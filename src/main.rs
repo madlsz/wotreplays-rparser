@@ -273,8 +273,8 @@ fn add_header(sheet: &mut Worksheet, fields: &[String]) -> Result<(), XlsxError>
     Ok(())
 }
 
-fn export_to_xlsx(players: &[Player], config: &Config) -> Result<(), XlsxError> {
-    let workbook = Workbook::new("out.xlsx")?;
+fn export_to_xlsx(players: &[Player], config: &Config, out: &str) -> Result<(), XlsxError> {
+    let workbook = Workbook::new(out)?;
     let mut sheets = [
         workbook.add_worksheet(Some("1"))?,
         workbook.add_worksheet(Some("2"))?,
@@ -315,24 +315,16 @@ fn main() {
     let args = Args::parse();
     match args.gui {
         false => {
-            let replays = match args.files.is_empty() {
-                true => [
-                    "20240519_2045_poland-Pl21_CS_63_05_prohorovka.wotreplay".to_string(),
-                    "20240519_2300_uk-GB91_Super_Conqueror_10_hills.wotreplay".to_string(),
-                ]
-                .to_vec(),
-                false => args.files,
-            };
-
             let mut buf = Vec::new();
-            for path in replays {
+            for (i, path) in args.replays.iter().enumerate() {
+                println!("{}/{} {}", i + 1, args.replays.len(), path);
                 let replay = load_replay(&path).unwrap();
                 get_players(&replay, &mut buf);
             }
 
             let merged_players = merge_players(&buf);
 
-            match export_to_xlsx(&merged_players, &config) {
+            match export_to_xlsx(&merged_players, &config, &args.out_path) {
                 Ok(()) => {}
                 Err(e) => eprintln!("{e}"),
             };
