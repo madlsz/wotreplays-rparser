@@ -182,8 +182,6 @@ impl Player {
         self.stats
             .insert(String::from("mileage_pb"), Player::mileage_pb);
         self.stats
-            .insert(String::from("mileage_pb"), Player::mileage_pb);
-        self.stats
             .insert(String::from("accuracy_pc"), Player::accuracy_pc);
         self.stats
             .insert(String::from("penetration_pc"), Player::penetration_pc);

@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-
 use clap::Parser;
+use std::collections::HashMap;
+use xlsxwriter::{Format, Workbook, Worksheet, XlsxError};
 
 use wotreplays_rparser::cl_args::Args;
+use wotreplays_rparser::config::Config;
 use wotreplays_rparser::load_replay;
 use wotreplays_rparser::player::Player;
-use xlsxwriter::{Format, Workbook, Worksheet, XlsxError};
 
 fn get_players(replay: &serde_json::Value, buf: &mut Vec<Player>) {
     let author_team = replay[0]["personal"]["avatar"]["team"].as_u64().unwrap();
@@ -257,6 +257,9 @@ fn merge_players(players: &[Player]) -> Vec<Player> {
         player.create_stats_pointers();
     }
 
+    merged_players.sort_by_key(|p| p.damage_dealt / p.battles_played);
+    merged_players.reverse();
+
     merged_players
 }
 
@@ -271,13 +274,7 @@ fn add_header(sheet: &mut Worksheet, fields: &[String]) -> Result<(), XlsxError>
 }
 
 fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
-    let fields = players
-        .first()
-        .unwrap()
-        .stats
-        .keys()
-        .map(|k| k.to_string())
-        .collect::<Vec<String>>();
+    let config = Config::new();
 
     let workbook = Workbook::new("out.xlsx")?;
     let mut sheets = [
@@ -285,18 +282,18 @@ fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
         workbook.add_worksheet(Some("2"))?,
     ];
     for sheet in sheets.iter_mut() {
-        add_header(sheet, &fields)?;
+        add_header(sheet, &config.fields)?;
     }
 
     let mut i1 = 1u32;
     let mut i2 = 1u32;
     for player in players {
         let j = if player.team == 1 { &mut i1 } else { &mut i2 };
-        for (i, field) in fields.iter().enumerate() {
+        for (i, field) in config.fields.iter().enumerate() {
             sheets[player.team as usize - 1].write_string(
                 *j,
                 i as u16,
-                &player.stats.get(field).unwrap()(player).to_string(),
+                &player.stats.get(field).expect(&format!("{field}"))(player).to_string(),
                 None,
             )?;
         }

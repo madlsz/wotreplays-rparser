@@ -1,4 +1,5 @@
 pub mod cl_args;
+pub mod config;
 pub mod player;
 pub mod replay_to_json;
 
