@@ -260,7 +260,7 @@ fn merge_players(players: &[Player]) -> Vec<Player> {
     merged_players
 }
 
-fn add_header(sheet: &mut Worksheet, fields: &[&str]) -> Result<(), XlsxError> {
+fn add_header(sheet: &mut Worksheet, fields: &[String]) -> Result<(), XlsxError> {
     let mut format_header = Format::new();
     format_header.set_bold();
     for (i, field) in fields.iter().enumerate() {
@@ -271,7 +271,13 @@ fn add_header(sheet: &mut Worksheet, fields: &[&str]) -> Result<(), XlsxError> {
 }
 
 fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
-    let fields = ["name", "account_dbid", "damage_dealt_pb"];
+    let fields = players
+        .first()
+        .unwrap()
+        .stats
+        .keys()
+        .map(|k| k.to_string())
+        .collect::<Vec<String>>();
 
     let workbook = Workbook::new("out.xlsx")?;
     let mut sheets = [
@@ -290,7 +296,7 @@ fn export_to_xlsx(players: &[Player]) -> Result<(), XlsxError> {
             sheets[player.team as usize - 1].write_string(
                 *j,
                 i as u16,
-                &player.stats.get(*field).unwrap()(player).to_string(),
+                &player.stats.get(field).unwrap()(player).to_string(),
                 None,
             )?;
         }
