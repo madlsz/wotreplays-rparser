@@ -27,7 +27,8 @@ pub fn cli(args: Box<Args>, config: Box<Config>) {
 
 pub fn gui(args: Box<Args>, config: Box<Config>) {
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([620.0, 460.0]),
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([config.gui.width, config.gui.height]),
         ..Default::default()
     };
     eframe::run_native(

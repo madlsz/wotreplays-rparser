@@ -5,8 +5,15 @@ use std::fs;
 use std::path;
 
 #[derive(serde::Deserialize, serde::Serialize)]
+pub struct GUI {
+    pub width: f32,
+    pub height: f32,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
     pub fields: Vec<String>,
+    pub gui: GUI,
 }
 
 impl Config {
@@ -43,6 +50,10 @@ impl Config {
                 "accuracy_pc".to_string(),
                 "penetration_pc".to_string(),
             ],
+            gui: GUI {
+                width: 620.0,
+                height: 480.0,
+            },
         }
     }
 
