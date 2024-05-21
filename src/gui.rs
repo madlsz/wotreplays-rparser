@@ -11,6 +11,7 @@ pub struct GUI {
     args: Box<Args>,
     config: Box<Config>,
     replays: Vec<PathBuf>,
+    show_settings: bool,
 }
 
 impl GUI {
@@ -19,6 +20,7 @@ impl GUI {
             args,
             config,
             replays: Vec::new(),
+            show_settings: false,
         }
     }
 }
@@ -27,6 +29,24 @@ impl eframe::App for GUI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
+                // settings window, opens when self.show_settings
+                egui::Window::new("Settings")
+                    .open(&mut self.show_settings)
+                    .show(ctx, |ui| {
+                        // ui.set_width(100.0);
+                        // ui.set_height(100.0);
+                        if ui.button("Delete config").clicked() {
+                            match Config::delete_from_disk() {
+                                Ok(_) => println!("Config deleted"),
+                                Err(e) => eprintln!("{e}"),
+                            }
+                        }
+                    });
+                // set self.show_settings to true in order to show the settings window
+                if ui.button("Settings").clicked() {
+                    self.show_settings = true;
+                }
+                // show file dialog to select replays, load the replays to self.replays
                 if ui.button("Add replays…").clicked() {
                     if let Some(replays) = rfd::FileDialog::new()
                         .add_filter("wotreplay", &["wotreplay"])

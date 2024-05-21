@@ -106,4 +106,15 @@ impl Config {
 
         path
     }
+
+    pub fn delete_from_disk() -> Result<(), String> {
+        if Config::config_dir_exists() && Config::config_file_exists() {
+            match fs::remove_file(Config::config_file_path()) {
+                Ok(_) => Ok(()),
+                Err(_) => Err("Couldn't remove the config file!".to_string()),
+            }
+        } else {
+            Err("Path doesn't exist!".to_string())
+        }
+    }
 }
