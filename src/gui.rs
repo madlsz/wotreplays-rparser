@@ -61,14 +61,16 @@ impl eframe::App for GUI {
             });
             if !self.replays.is_empty() {
                 let mut replay_to_remove: Option<usize> = None;
-                for (i, replay) in self.replays.iter().enumerate() {
-                    ui.horizontal(|ui| {
-                        ui.heading(replay.file_name().unwrap().to_str().unwrap());
-                        if ui.button("remove").clicked() {
-                            replay_to_remove = Some(i);
-                        }
-                    });
-                }
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    for (i, replay) in self.replays.iter().enumerate() {
+                        ui.horizontal(|ui| {
+                            ui.label(replay.file_name().unwrap().to_str().unwrap());
+                            if ui.button("x").clicked() {
+                                replay_to_remove = Some(i);
+                            }
+                        });
+                    }
+                });
                 if let Some(i) = replay_to_remove {
                     self.replays.remove(i);
                 }
