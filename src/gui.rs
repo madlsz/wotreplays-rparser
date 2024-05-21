@@ -50,10 +50,33 @@ impl eframe::App for GUI {
                 if ui.button("Add replays…").clicked() {
                     if let Some(replays) = rfd::FileDialog::new()
                         .add_filter("wotreplay", &["wotreplay"])
-                        .set_directory(dirs::home_dir().unwrap())
+                        .set_directory(match &self.config.select_replays_last_path {
+                            Some(path) => PathBuf::from(path),
+                            None => dirs::home_dir().unwrap(),
+                        })
                         .pick_files()
                     {
                         self.replays.extend(replays);
+                        let parent = self
+                            .replays
+                            .last()
+                            .unwrap()
+                            .parent()
+                            .unwrap()
+                            .to_str()
+                            .unwrap();
+                        match &self.config.select_replays_last_path {
+                            Some(path) => {
+                                if path != parent {
+                                    self.config.select_replays_last_path = Some(parent.to_string());
+                                    self.config.is_edited = true;
+                                }
+                            }
+                            None => {
+                                self.config.select_replays_last_path = Some(parent.to_string());
+                                self.config.is_edited = true
+                            }
+                        }
                     }
                 }
                 if !self.replays.is_empty() {
