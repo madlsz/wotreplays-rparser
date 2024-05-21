@@ -12,7 +12,7 @@ pub struct GUI {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
-    #[serde(skip_serializing)]
+    #[serde(skip)]
     pub is_edited: bool,
     pub fields: Vec<String>,
     pub gui: GUI,
@@ -68,6 +68,7 @@ impl Config {
         if Config::config_dir_exists() && Config::config_file_exists() {
             let buf = fs::read_to_string(Config::config_file_path()).unwrap();
 
+            // is_edited is false by default (bool default value)
             Some(serde_json::from_str::<Self>(&buf).unwrap())
         } else {
             None

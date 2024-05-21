@@ -4,18 +4,24 @@ use crate::process_replays::{export_to_xlsx, get_players, load_replay, merge_pla
 use dirs;
 use eframe::egui;
 use rfd;
+use std::cell::RefCell;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 #[allow(dead_code)]
 pub struct GUI {
-    args: Box<Args>,
-    config: Box<Config>,
+    args: Rc<RefCell<Args>>,
+    config: Rc<RefCell<Config>>,
     replays: Vec<PathBuf>,
     show_settings: bool,
 }
 
 impl GUI {
-    pub fn new(_cc: &eframe::CreationContext<'_>, args: Box<Args>, config: Box<Config>) -> Self {
+    pub fn new(
+        _cc: &eframe::CreationContext<'_>,
+        args: Rc<RefCell<Args>>,
+        config: Rc<RefCell<Config>>,
+    ) -> Self {
         Self {
             args,
             config,
@@ -48,9 +54,10 @@ impl eframe::App for GUI {
                 }
                 // show file dialog to select replays, load the replays to self.replays
                 if ui.button("Add replays…").clicked() {
+                    let mut config_mut = self.config.borrow_mut();
                     if let Some(replays) = rfd::FileDialog::new()
                         .add_filter("wotreplay", &["wotreplay"])
-                        .set_directory(match &self.config.select_replays_last_path {
+                        .set_directory(match &config_mut.select_replays_last_path {
                             Some(path) => PathBuf::from(path),
                             None => dirs::home_dir().unwrap(),
                         })
@@ -65,16 +72,17 @@ impl eframe::App for GUI {
                             .unwrap()
                             .to_str()
                             .unwrap();
-                        match &self.config.select_replays_last_path {
+
+                        match &config_mut.select_replays_last_path {
                             Some(path) => {
                                 if path != parent {
-                                    self.config.select_replays_last_path = Some(parent.to_string());
-                                    self.config.is_edited = true;
+                                    config_mut.select_replays_last_path = Some(parent.to_string());
+                                    config_mut.is_edited = true;
                                 }
                             }
                             None => {
-                                self.config.select_replays_last_path = Some(parent.to_string());
-                                self.config.is_edited = true
+                                config_mut.select_replays_last_path = Some(parent.to_string());
+                                config_mut.is_edited = true
                             }
                         }
                     }
@@ -96,8 +104,12 @@ impl eframe::App for GUI {
                             // .set_file_name(&self.args.out_path)
                             .save_file()
                         {
-                            export_to_xlsx(&merged_players, &self.config, out.to_str().unwrap())
-                                .unwrap();
+                            export_to_xlsx(
+                                &merged_players,
+                                &self.config.borrow(),
+                                out.to_str().unwrap(),
+                            )
+                            .unwrap();
                         }
                     }
                 }
