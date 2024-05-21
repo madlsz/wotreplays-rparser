@@ -32,7 +32,7 @@ pub fn gui(args: Box<Args>, config: Box<Config>) {
         ..Default::default()
     };
     eframe::run_native(
-        "wot-pref",
+        "rparser",
         options,
         Box::new(|cc| Box::new(gui::GUI::new(cc, args, config))),
     )
