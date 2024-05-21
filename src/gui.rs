@@ -85,8 +85,11 @@ impl eframe::App for GUI {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     for (i, replay) in self.replays.iter().enumerate() {
                         ui.horizontal(|ui| {
-                            ui.label(replay.file_name().unwrap().to_str().unwrap());
-                            if ui.button("x").clicked() {
+                            if ui
+                                .label(replay.file_name().unwrap().to_str().unwrap())
+                                .on_hover_text("right-click to remove")
+                                .secondary_clicked()
+                            {
                                 replay_to_remove = Some(i);
                             }
                         });
