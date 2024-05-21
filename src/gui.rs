@@ -81,6 +81,7 @@ impl eframe::App for GUI {
             });
             if !self.replays.is_empty() {
                 let mut replay_to_remove: Option<usize> = None;
+                ui.label(format!("{} replays", self.replays.len()));
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     for (i, replay) in self.replays.iter().enumerate() {
                         ui.horizontal(|ui| {
