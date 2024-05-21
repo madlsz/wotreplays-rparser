@@ -271,9 +271,11 @@ impl Player {
         Stats::F64(self.kills as f64 / self.battles_played as f64)
     }
 
+    /// radio + track + stun
     fn damage_assisted_pb(&self) -> Stats {
         Stats::F64(
-            (self.damage_assisted_radio + self.damage_assisted_track) as f64
+            (self.damage_assisted_radio + self.damage_assisted_track + self.damage_assisted_stun)
+                as f64
                 / self.battles_played as f64,
         )
     }
