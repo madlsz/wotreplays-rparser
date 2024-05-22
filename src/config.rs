@@ -12,13 +12,18 @@ pub struct GUI {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Config {
+    #[serde(skip)]
+    pub is_edited: bool,
     pub fields: Vec<String>,
     pub gui: GUI,
+    pub select_replays_last_path: Option<String>,
+    pub save_replay_last_patch: Option<String>,
 }
 
 impl Config {
     pub fn new() -> Self {
         Self {
+            is_edited: true,
             fields: vec![
                 "name".to_string(),
                 "account_dbid".to_string(),
@@ -54,6 +59,8 @@ impl Config {
                 width: 620.0,
                 height: 480.0,
             },
+            select_replays_last_path: None,
+            save_replay_last_patch: None,
         }
     }
 
@@ -61,6 +68,7 @@ impl Config {
         if Config::config_dir_exists() && Config::config_file_exists() {
             let buf = fs::read_to_string(Config::config_file_path()).unwrap();
 
+            // is_edited is false by default (bool default value)
             Some(serde_json::from_str::<Self>(&buf).unwrap())
         } else {
             None
