@@ -89,6 +89,7 @@ impl eframe::App for GUI {
                 }
                 if !self.replays.is_empty() {
                     if ui.button("Go").clicked() {
+                        let mut config_mut = self.config.borrow_mut();
                         let mut buf = Vec::new();
                         for path in &self.replays {
                             let replay = load_replay(path.to_str().unwrap());
@@ -100,8 +101,10 @@ impl eframe::App for GUI {
                         let merged_players = merge_players(&buf);
                         if let Some(out) = rfd::FileDialog::new()
                             .add_filter("xlsx", &["xlsx"])
-                            .set_directory(dirs::home_dir().unwrap())
-                            // .set_file_name(&self.args.out_path)
+                            .set_directory(match &config_mut.save_replay_last_patch {
+                                Some(path) => PathBuf::from(path),
+                                None => dirs::home_dir().unwrap(),
+                            })
                             .save_file()
                         {
                             export_to_xlsx(
@@ -110,6 +113,21 @@ impl eframe::App for GUI {
                                 out.to_str().unwrap(),
                             )
                             .unwrap();
+
+                            let parent = out.parent().unwrap().to_str().unwrap();
+                            match &config_mut.save_replay_last_patch {
+                                Some(path) => {
+                                    if path != parent {
+                                        config_mut.save_replay_last_patch =
+                                            Some(parent.to_string());
+                                        config_mut.is_edited = true;
+                                    }
+                                }
+                                None => {
+                                    config_mut.save_replay_last_patch = Some(parent.to_string());
+                                    config_mut.is_edited = true
+                                }
+                            }
                         }
                     }
                 }
